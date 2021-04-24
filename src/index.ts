@@ -99,8 +99,7 @@ const initApp = () => {
         )
   })
 
-  const [host, port] = config.host.split(':')
-  app.listen(+port, host, (err, address) => {
+  app.listen(+config.port, config.host, (err, address) => {
     if (err) throw err
     app.log.info(`Server listening on ${address}`)
   })
