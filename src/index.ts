@@ -8,6 +8,12 @@ import { IWebSocket } from './types'
 import pkg from '../package.json'
 const cluster = require('cluster')
 const numCPUs = require('os').cpus().length
+import redis from 'redis'
+
+const subscriber = redis.createClient(config.redis)
+const publisher = subscriber.duplicate()
+
+const WS_CHANNEL = 'ws:messages'
 
 const initApp = () => {
   const app = fastify({
@@ -63,9 +69,25 @@ const initApp = () => {
   const wsServer = new WebSocket.Server({ server: app.server })
 
   app.ready(() => {
+    subscriber.on('message', (channel, message) => {
+      if (channel === WS_CHANNEL) {
+        const clients: any = wsServer.clients
+        clients.forEach((client: IWebSocket) => {
+          if (client.readyState === WebSocket.OPEN) {
+            pubsub(client, message, app.log)
+          }
+        })
+      }
+    })
     wsServer.on('connection', (socket: IWebSocket) => {
       socket.on('message', async data => {
-        pubsub(socket, data, app.log)
+        const message: string = String(data)
+        const socketMessage = JSON.parse(message)
+        if (socketMessage.type === 'pub') {
+          publisher.publish(WS_CHANNEL, message)
+        } else {
+          pubsub(socket, data, app.log)
+        }
       })
 
       socket.on('pong', () => {
@@ -80,24 +102,26 @@ const initApp = () => {
       })
     })
 
-    setInterval(
-            () => {
-              const sockets: any = wsServer.clients
-              sockets.forEach((socket: IWebSocket) => {
-                if (socket.isAlive === false) {
-                  return socket.terminate()
-                }
-
-                function noop () {
-                }
-
-                socket.isAlive = false
-                socket.ping(noop)
-              })
-            },
-            10000 // 10 seconds
-        )
+    subscriber.subscribe(WS_CHANNEL)
   })
+
+  setInterval(
+        () => {
+          const sockets: any = wsServer.clients
+          sockets.forEach((socket: IWebSocket) => {
+            if (socket.isAlive === false) {
+              return socket.terminate()
+            }
+
+            function noop () {
+            }
+
+            socket.isAlive = false
+            socket.ping(noop)
+          })
+        },
+        10000 // 10 seconds
+    )
 
   app.listen(+config.port, config.host, (err, address) => {
     if (err) throw err
