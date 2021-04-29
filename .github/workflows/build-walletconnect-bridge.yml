@@ -31,13 +31,13 @@ jobs:
         run: |
           yarn build
 
-          cp package.json ./
+          cp package.json ./app
 
-          cp yarn.lock ./
+          cp yarn.lock ./app
       - name: Set environment variables
         run: |
           ARCHIVE_MAIAR_API="walletconnect_bridge_latest.tgz"
-          BUILD_DIR=${GITHUB_WORKSPACE}/
+          BUILD_DIR=${GITHUB_WORKSPACE}/app
 
           echo "ARCHIVE_MAIAR_API=${ARCHIVE_MAIAR_API}" >> $GITHUB_ENV
           echo "BUILD_DIR=${BUILD_DIR}" >> $GITHUB_ENV
