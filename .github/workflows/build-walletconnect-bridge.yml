@@ -26,14 +26,14 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
       - name: Install node_modules
-        run: npm install
+        run: yarn
       - name: Build
         run: |
-          npm run build
+          yarn build
 
           cp package.json build
 
-          cp package-lock.json build
+          cp yarn.lock build
       - name: Set environment variables
         run: |
           ARCHIVE_MAIAR_API="walletconnect_bridge_latest.tgz"
