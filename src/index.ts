@@ -6,12 +6,12 @@ import pubsub from './pubsub'
 import { setNotification } from './keystore'
 import { IWebSocket } from './types'
 import pkg from '../package.json'
-const cluster = require('cluster')
-const numCPUs = require('os').cpus().length
-import redis from 'redis'
+// const cluster = require('cluster')
+// const numCPUs = require('os').cpus().length
+// import redis from 'redis'
 
-const subscriber = redis.createClient(config.redis)
-const publisher = subscriber.duplicate()
+// const subscriber = redis.createClient(config.redis)
+// const publisher = subscriber.duplicate()
 
 const WS_CHANNEL = 'ws:messages'
 
@@ -69,25 +69,25 @@ const initApp = () => {
   const wsServer = new WebSocket.Server({ server: app.server })
 
   app.ready(() => {
-    subscriber.on('message', (channel, message) => {
-      if (channel === WS_CHANNEL) {
-        const clients: any = wsServer.clients
-        clients.forEach((client: IWebSocket) => {
-          if (client.readyState === WebSocket.OPEN) {
-            pubsub(client, message, app.log)
-          }
-        })
-      }
-    })
+    // subscriber.on('message', (channel, message) => {
+    //   if (channel === WS_CHANNEL) {
+    //     const clients: any = wsServer.clients
+    //     clients.forEach((client: IWebSocket) => {
+    //       if (client.readyState === WebSocket.OPEN) {
+    //         pubsub(client, message, app.log)
+    //       }
+    //     })
+    //   }
+    // })
     wsServer.on('connection', (socket: IWebSocket) => {
       socket.on('message', async data => {
-        const message: string = String(data)
-        const socketMessage = JSON.parse(message)
-        if (socketMessage.type === 'pub') {
-          publisher.publish(WS_CHANNEL, message)
-        } else {
+        // const message: string = String(data)
+        // const socketMessage = JSON.parse(message)
+        // if (socketMessage.type === 'sub') {
+        //   publisher.publish(WS_CHANNEL, message)
+        // } else {
           pubsub(socket, data, app.log)
-        }
+        // }
       })
 
       socket.on('pong', () => {
@@ -102,7 +102,7 @@ const initApp = () => {
       })
     })
 
-    subscriber.subscribe(WS_CHANNEL)
+    // subscriber.subscribe(WS_CHANNEL)
   })
 
   setInterval(
@@ -129,14 +129,14 @@ const initApp = () => {
   })
 }
 
-if (cluster.isMaster) {
-  console.log(`Master ${process.pid} is running`)
-  for (let i = 0; i < numCPUs; i++) {
-    cluster.fork()
-  }
-  cluster.on('exit', (worker: any) => {
-    console.log(`Worker ${worker.process.pid} died`)
-  })
-} else {
+// if (cluster.isMaster) {
+//   console.log(`Master ${process.pid} is running`)
+//   for (let i = 0; i < numCPUs; i++) {
+//     cluster.fork()
+//   }
+//   cluster.on('exit', (worker: any) => {
+//     console.log(`Worker ${worker.process.pid} died`)
+//   })
+// } else {
   initApp()
-}
+// }
