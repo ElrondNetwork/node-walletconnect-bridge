@@ -63,7 +63,7 @@ jobs:
 
       - name: Upload artifacts to S3
         run: |
-          aws s3 sync "${GITHUB_WORKSPACE}/artifacts" s3://maiar-api-builds
+          aws s3 sync "${GITHUB_WORKSPACE}/artifacts" s3://walletconnect-bridge-builds
 
   release:
     needs: [build]
