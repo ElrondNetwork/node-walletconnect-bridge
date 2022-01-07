@@ -16,6 +16,8 @@ import pkg from '../package.json'
 const WS_CHANNEL = 'ws:messages'
 
 const initApp = () => {
+  require('dd-trace').init();
+
   const app = fastify({
     logger: { prettyPrint: { forceColor: true } }
   })
@@ -86,7 +88,7 @@ const initApp = () => {
         // if (socketMessage.type === 'sub') {
         //   publisher.publish(WS_CHANNEL, message)
         // } else {
-          pubsub(socket, data, app.log)
+        pubsub(socket, data, app.log)
         // }
       })
 
@@ -106,22 +108,22 @@ const initApp = () => {
   })
 
   setInterval(
-        () => {
-          const sockets: any = wsServer.clients
-          sockets.forEach((socket: IWebSocket) => {
-            if (socket.isAlive === false) {
-              return socket.terminate()
-            }
+    () => {
+      const sockets: any = wsServer.clients
+      sockets.forEach((socket: IWebSocket) => {
+        if (socket.isAlive === false) {
+          return socket.terminate()
+        }
 
-            function noop () {
-            }
+        function noop() {
+        }
 
-            socket.isAlive = false
-            socket.ping(noop)
-          })
-        },
-        10000 // 10 seconds
-    )
+        socket.isAlive = false
+        socket.ping(noop)
+      })
+    },
+    10000 // 10 seconds
+  )
 
   app.listen(+config.port, config.host, (err, address) => {
     if (err) throw err
@@ -138,5 +140,5 @@ const initApp = () => {
 //     console.log(`Worker ${worker.process.pid} died`)
 //   })
 // } else {
-  initApp()
+initApp()
 // }
